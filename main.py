@@ -84,7 +84,7 @@ def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
 
-class ContactsView:
+class ContactsViews:
     def view_contacts(self):
         contacts = ContactDetail.query.all()
         print(contacts)
@@ -124,7 +124,7 @@ class ContactsView:
         db.session.commit()
         return redirect(url_for('view_contacts'))
     
-class FaceView:
+class FaceViews:
     def view_faces(self):
         faces = Face.query.all()
         return render_template('view_faces.html', faces=faces)
@@ -179,9 +179,19 @@ class FaceView:
         db.session.commit()
         return redirect(url_for('view_faces'))
 
+class ComputerVisionViews:
+    def start_inference():
+        pass
 
-contacts_view = ContactsView()
-face_view = FaceView()
+    def stop_inference():
+        pass
+
+    def start_training():
+        pass
+
+contacts_view = ContactsViews()
+face_view = FaceViews()
+computer_vision_view = ComputerVisionViews()
 
 
 app.add_url_rule('/view_contacts', view_func=contacts_view.view_contacts)
