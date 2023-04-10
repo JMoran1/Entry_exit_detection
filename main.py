@@ -167,7 +167,9 @@ class FaceView:
             return render_template('add_face.html', face=face)
         
     def delete_face(self, pk):
+        """Remove the image from the file system and delete the record from the database."""
         face = Face.query.filter_by(id=pk).first()
+        os.remove(face.image_path)
         db.session.delete(face)
         db.session.commit()
         return redirect(url_for('view_faces'))
