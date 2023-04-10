@@ -59,28 +59,28 @@ def create_tables():
 def home():
     return render_template('base.html')
 
-class AuthenticationView:
-    def login():
-        if request.method == 'POST':
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
 
-            username = request.form['username']
-            password = request.form['password']
+        username = request.form['username']
+        password = request.form['password']
 
-            user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
 
-            if user:
-                    print(user.password)
-                # Hash the user-entered password and compare to the stored hash
-                    if password == user.password:
-                        session['user_id'] = user.id
-                        return redirect(url_for('home'))
+        if user:
+                print(user.password)
+            # Hash the user-entered password and compare to the stored hash
+                if password == user.password:
+                    session['user_id'] = user.id
+                    return redirect(url_for('home'))
 
-        return render_template('login.html')
+    return render_template('login.html')
 
-
-    def logout():
-        session.pop('user_id', None)
-        return redirect(url_for('login'))
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
 
 class ContactsView:
     def view_contacts(self):
@@ -159,7 +159,7 @@ class FaceView:
 
 contacts_view = ContactsView()
 face_view = FaceView()
-auth_view = AuthenticationView()
+
 
 app.add_url_rule('/view_contacts', view_func=contacts_view.view_contacts)
 app.add_url_rule('/add_contact', view_func=contacts_view.add_contact, methods=['GET', 'POST'])
@@ -169,8 +169,7 @@ app.add_url_rule('/view_faces', view_func=face_view.view_faces)
 app.add_url_rule('/add_face', view_func=face_view.add_face, methods=['GET', 'POST'])
 app.add_url_rule('/update_face/<pk>', view_func=face_view.update_face, methods=['GET', 'POST'])
 app.add_url_rule('/delete_face/<pk>', view_func=face_view.delete_face)
-app.add_url_rule('/login', view_func=auth_view.login, methods=['GET', 'POST'])
-app.add_url_rule('/logout', view_func=auth_view.logout)
+
 
 
 if __name__ == '__main__':
