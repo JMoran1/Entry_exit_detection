@@ -1,0 +1,25 @@
+{% extends 'base.html' %} {% block content %}
+<body>
+  <div class="row justify-content-center">
+    <div class="col-6">
+      <h1 class="text-center">Faces</h1>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <td>Name</td>
+            <td>Image</td>
+          </tr>
+        </thead>
+        <tbody>
+          {% for face in faces %}
+        <tr>
+          <td>{{ face.name }}</td>
+          <td>{{ face.image_path }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+{% endblock %}

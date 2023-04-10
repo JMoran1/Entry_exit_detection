@@ -3,6 +3,7 @@ from flask import (Flask, jsonify, redirect, render_template, request, session,
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_utils import PasswordType
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -10,6 +11,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.sqlite3'
 # login_manager = LoginManager()
 # login_manager.init_app(app)
 db = SQLAlchemy(app)
+FACE_IMAGES = './Faces'
 
 
 class User(db.Model):
@@ -130,11 +132,25 @@ class FaceView:
     def add_face(self):
         if request.method == 'POST':
             name = request.form['name']
-            image_path = request.form['image_path']
-            face = Face(name=name, image_path=image_path)
-            db.session.add(face)
-            db.session.commit()
-            return redirect(url_for('view_faces'))
+
+            for uploaded_file in request.files.getlist('file'):
+                if uploaded_file.filename != '':
+                    print(uploaded_file.filename)
+
+                    if os.path.isdir(os.path.join(FACE_IMAGES, name)):
+                        print('Directory already exists')
+                    else:
+                        os.mkdir(os.path.join(FACE_IMAGES, name))
+                        print('Directory created')
+
+                    image_path = os.path.join(
+                        FACE_IMAGES, name, uploaded_file.filename)
+                    uploaded_file.save(image_path)
+
+                    face = Face(name=name, image_path=image_path)
+                    db.session.add(face)
+                    db.session.commit()
+                    return redirect(url_for('view_faces'))
         else:
             return render_template('add_face.html', face=None)
         
