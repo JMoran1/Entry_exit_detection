@@ -1,18 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Contact Form</title>
-</head>
+{% extends 'base.html' %}
+{% block content %}
+
 <body>
-	<h1>Contact Form</h1>
-	<form method="POST" action="">
-		<label for="name">Name:</label>
-		<input type="text" id="name" name="name" value="{{contact.name}}"><br><br>
-		<label for="phone">Phone:</label>
-		<input type="tel" id="phone" name="phone" value="{{contact.phone}}"><br><br>
-		<label for="email">Email:</label>
-		<input type="email" id="email" name="email" value="{{contact.email}}"><br><br>
-		<input type="submit" value="Submit">
-	</form>
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <h1>Contact Form</h1>
+        <form method="POST" action="">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{contact.name}}" class="form-control"><br>
+            <label for="phone">Phone:</label>
+            <input type="tel" id="phone" name="phone" value="{{contact.phone}}" class="form-control"><br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{contact.email}}" class="form-control"><br>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+        </div>
+    </div>	
 </body>
-</html>
+{% endblock %}
