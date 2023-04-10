@@ -9,7 +9,7 @@ from keras_vggface.vggface import VGGFace
 from tensorflow import keras
 
 class FaceRecognitionModel:
-    def __init__(self, image_size=(224, 224), batch_size=8, num_classes=4, learning_rate=0.0001, epochs=20):
+    def __init__(self, num_classes, image_size=(224, 224), batch_size=8, learning_rate=0.0001, epochs=20):
         self.image_size = image_size
         self.batch_size = batch_size
         self.num_classes = num_classes
