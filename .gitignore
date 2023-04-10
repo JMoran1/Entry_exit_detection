@@ -155,5 +155,7 @@ cython_debug/
 app.sqlite3
 instance/app.sqlite3
 
-.jpg
-.jpeg
+*.jpg
+*.jpeg
+*.png
+.DS_Store
