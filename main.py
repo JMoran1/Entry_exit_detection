@@ -158,11 +158,16 @@ class FaceView:
         face = Face.query.filter_by(id=pk).first()
         if request.method == 'POST':
             name = request.form['name']
-            image_path = request.form['image_path']
-            face.name = name
-            face.image_path = image_path
-            db.session.commit()
-            return redirect(url_for('view_faces'))
+
+            for uploaded_file in request.files.getlist('file'):
+                if uploaded_file.filename != '':
+                    image_path = os.path.join(
+                        FACE_IMAGES, name, uploaded_file.filename)
+                    
+                    face.name = name
+                    face.image_path = image_path
+                    db.session.commit()
+                    return redirect(url_for('view_faces'))
         else:
             return render_template('add_face.html', face=face)
         
