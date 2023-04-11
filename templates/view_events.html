@@ -1,0 +1,36 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-9">
+      {% for event in events %}
+      <div class="card my-3">
+        <div class="row g-0">
+          <div class="col-md-6">
+            <img
+              src="{{ url_for('static', filename=event.image_path) }}"
+              class="img-fluid"
+              alt="Image description"
+            />
+          </div>
+          <div class="col-md-6">
+            <div class="card-body">
+              <h5 class="card-title text-center">Card title</h5>
+              <p class="card-text">
+                <strong>Date:</strong> {{ event.date.strftime('%d-%m-%Y') }}
+              </p>
+              <p class="card-text">
+                <strong>Event:</strong> {{ event.event }}
+              </p>
+              <p class="card-text">
+                <strong>Name:</strong> {{ event.name }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
