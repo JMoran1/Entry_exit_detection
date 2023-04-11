@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_utils import PasswordType
 import os
+from train import FaceRecognitionModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -186,8 +187,12 @@ class ComputerVisionViews:
     def stop_inference():
         pass
 
+    @app.route('/start_training')
     def start_training():
-        pass
+        names = db.session.query(Face.name).distinct().all()
+        training_model = FaceRecognitionModel(num_classes=(len(names) + 1))
+        training_model.train(FACE_IMAGES)
+        return redirect(url_for('view_faces'))
 
 contacts_view = ContactsViews()
 face_view = FaceViews()
