@@ -7,6 +7,7 @@ from keras.layers import Dense, Flatten, Input
 from keras.utils.data_utils import get_file
 from keras_vggface.vggface import VGGFace
 from tensorflow import keras
+import matplotlib.pyplot as plt
 
 class FaceRecognitionModel:
     def __init__(self, num_classes, image_size=(224, 224), batch_size=8, learning_rate=0.0001, epochs=20):
@@ -55,18 +56,17 @@ class FaceRecognitionModel:
         history = custom_model.fit(train_dataset, epochs=self.epochs)
         return history
     
-import matplotlib.pyplot as plt
-
-model = FaceRecognitionModel(num_classes=4)
-history = model.train("./Faces")
-
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['loss'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.show()
 
 
+if __name__ == "__main__":
+    model = FaceRecognitionModel(num_classes=4)
+    history = model.train("./Faces")
+
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['loss'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.show()
 
 
