@@ -1,14 +1,13 @@
 from flask import (Flask, jsonify, redirect, render_template, request, session,
                    url_for, flash, Response)
-from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy_utils import PasswordType
 import os
 from train import FaceRecognitionModel
 import cv2
 import time
 from capture import CaptureFaces
 import datetime
+from detection import InferenceThread
 
 
 app = Flask(__name__)
@@ -19,9 +18,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.sqlite3'
 db = SQLAlchemy(app)
 FACE_IMAGES = './Faces'
 
-# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0)
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+global inference_thread
 
 
 class User(db.Model):
@@ -211,11 +212,19 @@ class FaceViews:
         return redirect(url_for('view_faces'))
 
 class ComputerVisionViews:
+    @app.route('/start_inference')
     def start_inference():
-        pass
+        global inference_thread
+        inference_thread = InferenceThread(video=cap)
+        inference_thread.start()
+        return redirect(url_for('home'))
 
+    @app.route('/stop_inference')
     def stop_inference():
-        pass
+        print('Stopping inference')
+        global inference_thread
+        inference_thread.stop()
+        return redirect(url_for('home'))
 
     @app.route('/start_training')
     def start_training():
@@ -241,6 +250,7 @@ class EventViews:
         # Show all events in the database for the current day
         events = Event.query.all()
         return render_template('view_events.html', events=events)
+    
 
 contacts_view = ContactsViews()
 face_view = FaceViews()
