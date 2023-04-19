@@ -159,3 +159,5 @@ instance/app.sqlite3
 *.jpeg
 *.png
 .DS_Store
+
+constants.py
