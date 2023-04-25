@@ -8,9 +8,10 @@ from keras.utils.data_utils import get_file
 from keras_vggface.vggface import VGGFace
 from tensorflow import keras
 import matplotlib.pyplot as plt
+import uuid
 
 class FaceRecognitionModel:
-    def __init__(self, num_classes, image_size=(224, 224), batch_size=8, learning_rate=0.0001, epochs=20):
+    def __init__(self, num_classes, image_size=(224, 224), batch_size=8, learning_rate=0.0001, epochs=5):
         self.image_size = image_size
         self.batch_size = batch_size
         self.num_classes = num_classes
@@ -54,7 +55,9 @@ class FaceRecognitionModel:
         train_dataset = self.load_dataset(dataset_directory)
         custom_model = self.build_model()
         history = custom_model.fit(train_dataset, epochs=self.epochs)
-        return history
+        model_name = str(uuid.uuid1())[:8] + '.h5'
+        custom_model.save(model_name)
+        return model_name, history
     
 
 
