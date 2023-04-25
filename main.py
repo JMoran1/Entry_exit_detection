@@ -56,6 +56,7 @@ class Face(db.Model):
     image_path = db.Column(db.String(255), nullable=False)
 
 def login_required(f):
+    """Creates a wrapper to make views require the user to be logged in"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -97,7 +98,6 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user:
-                print(user.password)
             # Hash the user-entered password and compare to the stored hash
                 if password == user.password:
                     session['user_id'] = user.id
@@ -257,16 +257,18 @@ class ComputerVisionViews:
         evaluate_model(name, history)
         return redirect(url_for('view_faces'))
     
-    @app.route('/capture_face_images')
+    @app.route('/capture_face_images', methods=['GET', 'POST'])
     @login_required
     def capture_face_images():
-        image_capture = CaptureFaces(name="Jacob", video=cap)
-        image_capture.start()
-        print('Starting image capture')
-        time.sleep(5)
-        print('Stopping image capture')
-        image_capture.stop()
-        image_capture.join()
+        if request.method == 'POST':
+            image_capture = CaptureFaces(name="Jacob", video=cap, path=FACE_IMAGES)
+            image_capture.start()
+            print('Starting image capture')
+            # wait for the thread to finish
+            image_capture.join()
+        else:
+            return render_template('capture_face_images.html')
+        
         return redirect(url_for('view_faces'))
 
 class EventViews:
