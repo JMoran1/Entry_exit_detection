@@ -9,15 +9,14 @@ from capture import CaptureFaces
 import datetime
 from detection import InferenceThread
 import json
+from functools import wraps
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.sqlite3'
-# login_manager = LoginManager()
-# login_manager.init_app(app)
 db = SQLAlchemy(app)
-FACE_IMAGES = './Faces'
+FACE_IMAGES = './static/Faces'
 EVENT_IMAGES = './static/Events'
 
 cap = cv2.VideoCapture(0)
@@ -56,6 +55,13 @@ class Face(db.Model):
     name = db.Column(db.String(255), nullable=False)
     image_path = db.Column(db.String(255), nullable=False)
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.before_first_request
 def create_tables():
@@ -77,6 +83,7 @@ def create_tables():
 
 
 @app.route('/')
+@login_required
 def home():
     return render_template('index.html')
 
@@ -119,12 +126,14 @@ def video_feed():
 
 
 class ContactsViews:
+    @login_required
     def view_contacts(self):
         contacts = ContactDetail.query.all()
         print(contacts)
 
         return render_template('view_contacts.html', contacts=contacts)
 
+    @login_required
     def add_contact(self):
         if request.method == 'POST':
             name = request.form['name']
@@ -137,6 +146,7 @@ class ContactsViews:
         else:
             return render_template('add_contact.html', contact=None)
 
+    @login_required
     def update_contact(self, pk):
         contact = ContactDetail.query.filter_by(id=pk).first()
         if request.method == 'POST':
@@ -152,6 +162,7 @@ class ContactsViews:
         else:
             return render_template('add_contact.html', contact=contact)
 
+    @login_required
     def delete_contact(self, pk):
         contact = ContactDetail.query.filter_by(id=pk).first()
         db.session.delete(contact)
@@ -159,10 +170,12 @@ class ContactsViews:
         return redirect(url_for('view_contacts'))
     
 class FaceViews:
+    @login_required
     def view_faces(self):
         faces = Face.query.all()
         return render_template('view_faces.html', faces=faces)
     
+    @login_required
     def add_face(self):
         if request.method == 'POST':
             name = request.form['name']
@@ -188,6 +201,7 @@ class FaceViews:
         else:
             return render_template('add_face.html', face=None)
         
+    @login_required
     def update_face(self, pk):
         face = Face.query.filter_by(id=pk).first()
         if request.method == 'POST':
@@ -205,6 +219,7 @@ class FaceViews:
         else:
             return render_template('add_face.html', face=face)
         
+    @login_required
     def delete_face(self, pk):
         """Remove the image from the file system and delete the record from the database."""
         face = Face.query.filter_by(id=pk).first()
@@ -215,6 +230,7 @@ class FaceViews:
 
 class ComputerVisionViews:
     @app.route('/start_inference')
+    @login_required
     def start_inference():
         global inference_thread
         inference_thread = InferenceThread(video=cap, model_name=get_model_name())
@@ -222,6 +238,7 @@ class ComputerVisionViews:
         return redirect(url_for('home'))
 
     @app.route('/stop_inference')
+    @login_required
     def stop_inference():
         print('Stopping inference')
         global inference_thread
@@ -229,10 +246,11 @@ class ComputerVisionViews:
         return redirect(url_for('home'))
 
     @app.route('/start_training')
+    @login_required
     def start_training():
         names = db.session.query(Face.name).distinct().all()
-        # training_model = FaceRecognitionModel(num_classes=(len(names) + 1))
-        training_model = FaceRecognitionModel(num_classes=4)
+        training_model = FaceRecognitionModel(num_classes=(len(names) + 1))
+        # training_model = FaceRecognitionModel(num_classes=4)
         name, history = training_model.train(FACE_IMAGES)
         print(history.history['accuracy'][-1])
         print(name)
@@ -240,6 +258,7 @@ class ComputerVisionViews:
         return redirect(url_for('view_faces'))
     
     @app.route('/capture_face_images')
+    @login_required
     def capture_face_images():
         image_capture = CaptureFaces(name="Jacob", video=cap)
         image_capture.start()
@@ -252,6 +271,7 @@ class ComputerVisionViews:
 
 class EventViews:
     @app.route('/view_events')
+    @login_required
     def view_events():
         # Show all events in the database for the current day
         events = Event.query.all()
