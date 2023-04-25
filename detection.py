@@ -11,6 +11,7 @@ import torch
 from matplotlib import pyplot as plt
 from tensorflow import keras
 import sqlite3
+from collections import deque
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
   
@@ -44,6 +45,7 @@ class InferenceThread(threading.Thread):
         self.custom_resnet_model = keras.models.load_model(model_name)
         self.prob_model = keras.Sequential([self.custom_resnet_model, 
                                 keras.layers.Softmax()])
+        self.frame_buffer = deque(maxlen=10)
         
     def identifyFace(self, frame):
         face = cv2.resize(frame, (224, 224))
@@ -57,6 +59,7 @@ class InferenceThread(threading.Thread):
             ret, frame = self.video.read()
             frame_height = frame.shape[0]
             results = model(frame)
+            self.frame_buffer.append(frame)
             
             current_people_ids = set()
             # Extract the bounding box coordinates of only the person class
@@ -81,7 +84,7 @@ class InferenceThread(threading.Thread):
                 pred = np.argmax(pred)
 
                 # cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            #     # Check if people have entered or left the frame
+            # Check if people have entered or left the frame
             global previous_people_ids
             entered_people = current_people_ids - previous_people_ids
             left_people = previous_people_ids - current_people_ids
@@ -90,8 +93,9 @@ class InferenceThread(threading.Thread):
                 print(f"People entered the frame: {entered_people}")
                 add_event("Person", "Entered", "image.jpg")
             if left_people:
+                cv2.imwrite("./static/Events/image.jpg", self.frame_buffer[0])
                 print(f"People left the frame: {left_people}")
-                add_event("Person", "Left", "image.jpg")
+                add_event("Person", "Left", "/Events/image.jpg")
 
             # Update the previous_people_ids for the next iteration
             previous_people_ids = current_people_ids
