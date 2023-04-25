@@ -8,6 +8,7 @@ import time
 from capture import CaptureFaces
 import datetime
 from detection import InferenceThread
+import json
 
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.sqlite3'
 # login_manager.init_app(app)
 db = SQLAlchemy(app)
 FACE_IMAGES = './Faces'
+EVENT_IMAGES = './static/Events'
 
 cap = cv2.VideoCapture(0)
 
@@ -68,9 +70,9 @@ def create_tables():
     # db.session.commit()
 
     # Create a test event
-    test_event = Event(name='Jacob', date=datetime.date(2023,4,11), event='Entering', image_path='./Events/20230227-121817308.jpg')
-    db.session.add(test_event)
-    db.session.commit()
+    # test_event = Event(name='Jacob', date=datetime.date(2023,4,11), event='Entering', image_path='./Events/20230227-121817308.jpg')
+    # db.session.add(test_event)
+    # db.session.commit()
 
 
 
@@ -215,7 +217,7 @@ class ComputerVisionViews:
     @app.route('/start_inference')
     def start_inference():
         global inference_thread
-        inference_thread = InferenceThread(video=cap)
+        inference_thread = InferenceThread(video=cap, model_name=get_model_name())
         inference_thread.start()
         return redirect(url_for('home'))
 
@@ -229,8 +231,12 @@ class ComputerVisionViews:
     @app.route('/start_training')
     def start_training():
         names = db.session.query(Face.name).distinct().all()
-        training_model = FaceRecognitionModel(num_classes=(len(names) + 1))
-        model = training_model.train(FACE_IMAGES)
+        # training_model = FaceRecognitionModel(num_classes=(len(names) + 1))
+        training_model = FaceRecognitionModel(num_classes=4)
+        name, history = training_model.train(FACE_IMAGES)
+        print(history.history['accuracy'][-1])
+        print(name)
+        evaluate_model(name, history)
         return redirect(url_for('view_faces'))
     
     @app.route('/capture_face_images')
@@ -267,6 +273,20 @@ app.add_url_rule('/add_face', view_func=face_view.add_face, methods=['GET', 'POS
 app.add_url_rule('/update_face/<pk>', view_func=face_view.update_face, methods=['GET', 'POST'])
 app.add_url_rule('/delete_face/<pk>', view_func=face_view.delete_face)
 
+def evaluate_model(name, history):
+    if history.history['accuracy'][-1] > 0.7:
+        with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+            data['current_model'] = name
+            data['accuracy_score'] = history.history['accuracy'][-1]
+
+        with open('config.json', 'w') as json_file:
+            json.dump(data, json_file)
+
+def get_model_name():
+    with open('config.json', 'r') as json_file:
+        data = json.load(json_file)
+        return data['current_model']
 
 
 if __name__ == '__main__':
