@@ -10,7 +10,11 @@ import datetime
 from detection import InferenceThread
 import json
 from functools import wraps
-
+from alert import SMSSender
+import time
+import threading
+import sqlite3
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -124,6 +128,9 @@ def video_feed():
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/settings')
+def settings():
+    return render_template('settings.html') 
 
 class ContactsViews:
     @login_required
@@ -279,6 +286,36 @@ class EventViews:
         events = Event.query.all()
         return render_template('view_events.html', events=events)
     
+class AlertSystem:
+    @app.route('/start_alert_system/<name>')
+    def start_alert_system(name):
+        with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+        timer = data['timer']
+        min_time = data['min_time']
+        max_time = data['max_time']
+        time = datetime.datetime.now()
+
+        # Check if the current time is within the time range
+        if time.hour >= min_time and time.hour <= max_time:
+            # Start timer
+            alert_thread = threading.Thread(target=alert_timer, args=(timer,))
+            alert_thread.start()
+        else:
+            requests.get('http://127.0.0.1:5000/send_alert')
+            return "Left in excluded time"
+
+
+        return "Success"
+    
+    @app.route('/send_alert')
+    def send_alert():
+        sms = SMSSender()
+        # Get all contacts from the database
+        contacts = ContactDetail.query.all()
+        for contact in contacts:
+            sms.send_sms(contact.phone_number, f"Alert! Person has left the house!")
+        return "Success"
 
 contacts_view = ContactsViews()
 face_view = FaceViews()
@@ -309,6 +346,33 @@ def get_model_name():
     with open('config.json', 'r') as json_file:
         data = json.load(json_file)
         return data['current_model']
+    
+def has_returned(time):
+    conn = sqlite3.connect('./instance/app.sqlite3')
+    c = conn.cursor()
+    c.execute("SELECT * FROM Event WHERE date > ?", (time,))
+    events = c.fetchall()
+    c.close()
+    conn.close()
+    
+    for event in events:
+        if event[2] == 'Entered':
+            return True
+        
+    return False
+    
+def alert_timer(timer):
+    current_time = datetime.datetime.now()
+    returned = False
+    time.sleep(timer)
+    # Get a list of all events after the current time
+    returned = has_returned(current_time)
+    print(returned)
+    
+    if not returned:
+        requests.get('http://127.0.0.1:5000/send_alert')
+
+
 
 
 if __name__ == '__main__':
