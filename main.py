@@ -15,6 +15,7 @@ import time
 import threading
 import sqlite3
 import requests
+from sqlalchemy import distinct
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -130,7 +131,25 @@ def video_feed():
 
 @app.route('/settings')
 def settings():
-    return render_template('settings.html') 
+    return render_template('settings.html')
+
+@app.route('/change_times', methods=['GET','POST'])
+def change_times():
+    with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+    times = {
+        'timer': data['timer'],
+        'min_time': data['min_time'],
+        'max_time': data['max_time']
+    }
+    if request.method == 'POST':
+        data['timer'] = request.form['timer']
+        data['min_time'] = request.form['min_time']
+        data['max_time'] = request.form['max_time']
+        with open('config.json', 'w') as json_file:
+            json.dump(data, json_file)
+        return redirect(url_for('settings'))
+    return render_template('change_times.html', times=times)
 
 class ContactsViews:
     @login_required
@@ -291,6 +310,15 @@ class AlertSystem:
     def start_alert_system(name):
         with open('config.json', 'r') as json_file:
             data = json.load(json_file)
+
+        # Get a list of all names in the Faces table
+        unique_names = db.session.query(distinct(User.name)).all()
+        unique_names = [name[0] for name in unique_names]
+        unique_names.append('Unknown')
+        unique_names = sorted(unique_names)
+
+
+        
         timer = data['timer']
         min_time = data['min_time']
         max_time = data['max_time']
