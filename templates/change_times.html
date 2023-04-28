@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<body>
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <h1>Contact Form</h1>
+        <form method="POST" action="">
+            <label for="timer">Time before notification is sent: (Minutes)</label>
+            <input type="text" id="timer" name="timer" value="{{times.timer}}" class="form-control"><br>
+            <label for="min_time">Set earliest time to go out: (24hrs)</label>
+            <select id="min_time" name="min_time" class="form-control">
+                {% for hour in range(0, 24) %}
+                    <option value="{{ hour }}" {% if hour == times.min_time|int %}selected{% endif %}>{{ "{:02d}".format(hour) }}:00</option>
+                {% endfor %}
+                </select>
+            <label for="max_time">Set latest time to go out: (24hrs)</label>
+            <select id="max_time" name="max_time" class="form-control">
+                {% for hour in range(0, 24) %}
+                    <option value="{{ hour }}" {% if hour == times.max_time|int %}selected{% endif %}>{{ "{:02d}".format(hour) }}:00</option>
+                {% endfor %}
+                </select>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+        </div>
+    </div>	
+</body>
+{% endblock %}

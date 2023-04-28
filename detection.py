@@ -96,6 +96,7 @@ class InferenceThread(threading.Thread):
                 cv2.imwrite("./static/Events/image.jpg", self.frame_buffer[0])
                 print(f"People left the frame: {left_people}")
                 add_event("Person", "Left", "/Events/image.jpg")
+                requests.get(f'http://127.0.0.1:5000/start_alert_system/{pred}')
 
             # Update the previous_people_ids for the next iteration
             previous_people_ids = current_people_ids
