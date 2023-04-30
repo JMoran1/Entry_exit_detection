@@ -34,11 +34,14 @@ class CaptureFaces(threading.Thread):
                 faces = face_cascade.detectMultiScale(frame, 1.3, 5)
                 for (x, y, w, h) in faces:
                     print(f"Face detected at {x}, {y}, {w}, {h}")
+                    path = os.path.join(self.path, self.name)
+                    if not os.path.exists(path):
+                        os.makedirs(path)
                     filepath = os.path.join(self.path, self.name, f"{prefix}_{self.name}_{count}.jpg") 
                     cv.imwrite(filepath, frame[y:y+h, x:x+w])
                     self.add_face(filepath)
                     count += 1
-                if count > 10:
+                if count > 50:
                     print("Enough faces")
                     self.stop_event.set()
                     # break
