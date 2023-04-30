@@ -287,10 +287,9 @@ class ComputerVisionViews:
     @login_required
     def capture_face_images():
         if request.method == 'POST':
-            image_capture = CaptureFaces(name="Jacob", video=cap, path=FACE_IMAGES)
+            name = request.form['name']
+            image_capture = CaptureFaces(name=name, video=cap, path=FACE_IMAGES)
             image_capture.start()
-            print('Starting image capture')
-            # wait for the thread to finish
             image_capture.join()
         else:
             return render_template('capture_face_images.html')
@@ -317,8 +316,6 @@ class AlertSystem:
         unique_names.append('Unknown')
         unique_names = sorted(unique_names)
 
-
-        
         timer = data['timer']
         min_time = data['min_time']
         max_time = data['max_time']
@@ -395,7 +392,6 @@ def alert_timer(timer):
     time.sleep(timer)
     # Get a list of all events after the current time
     returned = has_returned(current_time)
-    print(returned)
     
     if not returned:
         requests.get('http://127.0.0.1:5000/send_alert')

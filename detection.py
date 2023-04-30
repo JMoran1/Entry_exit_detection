@@ -34,6 +34,18 @@ def add_event(name, event, image_path):
     c.close()
     conn.close()
 
+def get_names():
+    conn = sqlite3.connect('./instance/app.sqlite3')
+    c = conn.cursor()
+    c.execute("SELECT name FROM face")
+    names = c.fetchall()
+    c.close()
+    conn.close()
+    names = [name[0] for name in names]
+    names = list(set(names))
+    names.append("Unknown")
+    return sorted(names)
+
 global previous_people_ids
 previous_people_ids = set()
 
@@ -55,11 +67,23 @@ class InferenceThread(threading.Thread):
 
     def run(self):
         count = 0
+        entry_detected = False
+        entry_count = 0
         while not self.stop_event.is_set():
             ret, frame = self.video.read()
             frame_height = frame.shape[0]
             results = model(frame)
             self.frame_buffer.append(frame)
+
+            if entry_detected:
+                entry_count += 1
+                if entry_count > 5:
+                    entry_detected = False
+                    entry_count = 0
+                    suffix = str(uuid.uuid1())[:4]
+                    cv2.imwrite(f"./static/Events/image{suffix}.jpg", self.frame_buffer[0])
+                    add_event("Person", "Entered", f"/Events/image{suffix}.jpg")
+
             
             current_people_ids = set()
             # Extract the bounding box coordinates of only the person class
@@ -91,11 +115,12 @@ class InferenceThread(threading.Thread):
 
             if entered_people:
                 print(f"People entered the frame: {entered_people}")
-                add_event("Person", "Entered", "image.jpg")
+                entry_detected = True
             if left_people:
                 cv2.imwrite("./static/Events/image.jpg", self.frame_buffer[0])
                 print(f"People left the frame: {left_people}")
-                add_event("Person", "Left", "/Events/image.jpg")
+                names = get_names()
+                add_event(f"{names[pred]}", "Left", "/Events/image.jpg")
                 requests.get(f'http://127.0.0.1:5000/start_alert_system/{pred}')
 
             # Update the previous_people_ids for the next iteration
