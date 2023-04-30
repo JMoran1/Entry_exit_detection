@@ -73,18 +73,13 @@ def login_required(f):
 def create_tables():
     """Create tables in the database before the first request is made."""
     db.create_all()
-    # test_user = User(username='user', password='user')
-    # db.session.add(test_user)
-    # db.session.commit()
 
-    # test_contact = ContactDetail(name='test', email='test', phone='test', user_id=1)
-    # db.session.add(test_contact)
-    # db.session.commit()
+    user = User.query.filter_by(username='user').first()
+    if not user:
+        test_user = User(username='user', password='user')
+        db.session.add(test_user)
+        db.session.commit()
 
-    # Create a test event
-    # test_event = Event(name='Jacob', date=datetime.date(2023,4,11), event='Entering', image_path='./Events/20230227-121817308.jpg')
-    # db.session.add(test_event)
-    # db.session.commit()
 
 
 
