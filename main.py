@@ -342,6 +342,39 @@ class AlertSystem:
             sms.send_sms(contact.phone_number, f"Alert! Person has left the house!")
         return "Success"
 
+class UsersViews:
+
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            user = User.query.filter_by(username=username).first()
+            if user:
+                return redirect(url_for('register'))
+            else:
+                user =  User(username=username, password=password)
+                db.session.add(user)
+                db.session.commit()
+                return redirect(url_for('settings'))
+        
+        return render_template('register.html')
+    
+    @app.route('/view_users')
+    @login_required
+    def view_users():
+        users = User.query.all()
+        return render_template('view_users.html', users=users)
+    
+    @app.route('/remove_user/<pk>')
+    @login_required
+    def remove_user(pk):
+        user = User.query.filter_by(id=pk).first()
+        db.session.delete(user)
+        db.session.commit()
+        return redirect(url_for('view_users'))
+
+
 contacts_view = ContactsViews()
 face_view = FaceViews()
 computer_vision_view = ComputerVisionViews()

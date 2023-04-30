@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<body>
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <h1>Add new user</h1>
+        <form method="POST" action="">
+            <label for="name">Username:</label>
+            <input type="text" id="username" name="username" value="" class="form-control"><br>
+            <label for="name">Password:</label>
+            <input type="text" id="password" name="password" value="" class="form-control"><br>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+        </div>
+    </div>	
+</body>
+
+{% endblock %}
