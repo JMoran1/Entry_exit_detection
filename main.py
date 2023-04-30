@@ -82,7 +82,6 @@ def create_tables():
 
 
 
-
 @app.route('/')
 @login_required
 def home():
@@ -345,6 +344,37 @@ class AlertSystem:
         for contact in contacts:
             sms.send_sms(contact.phone_number, f"Alert! Person has left the house!")
         return "Success"
+    
+    @app.route('/add_to_alert_list', methods=['GET','POST'])
+    def add_to_alert_list():
+        with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+        
+        if request.method == 'POST':
+            name = request.form['name']
+            data['alert_list'].append(name)
+            with open('config.json', 'w') as json_file:
+                json.dump(data, json_file)
+            return redirect(url_for('view_alert_list'))
+        else:
+            return render_template('add_to_alert_list.html')
+        
+    @app.route('/remove_from_alert_list/<name>')
+    def remove_from_alert_list(name):
+        with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+        data['alert_list'].remove(name)
+        with open('config.json', 'w') as json_file:
+            json.dump(data, json_file)
+        return redirect(url_for('view_alert_list'))
+    
+    @app.route('/view_alert_list')
+    def view_alert_list():
+        with open('config.json', 'r') as json_file:
+            data = json.load(json_file)
+        return render_template('view_alert_list.html', alert_list=data['alert_list'])
+        
+        
 
 class UsersViews:
 

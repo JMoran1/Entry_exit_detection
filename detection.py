@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 from tensorflow import keras
 import sqlite3
 from collections import deque
+import json
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
   
@@ -121,7 +122,11 @@ class InferenceThread(threading.Thread):
                 print(f"People left the frame: {left_people}")
                 names = get_names()
                 add_event(f"{names[pred]}", "Left", "/Events/image.jpg")
-                requests.get(f'http://127.0.0.1:5000/start_alert_system/{pred}')
+                
+                with open('config.json', 'r') as json_file:
+                    data = json.load(json_file)
+                    if str(names[pred]) in data['alert_list']:
+                        requests.get(f'http://127.0.0.1:5000/start_alert_system/{names[pred]}')
 
             # Update the previous_people_ids for the next iteration
             previous_people_ids = current_people_ids
