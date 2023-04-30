@@ -198,8 +198,15 @@ class ContactsViews:
 class FaceViews:
     @login_required
     def view_faces(self):
-        faces = Face.query.all()
-        return render_template('view_faces.html', faces=faces)
+        # faces = Face.query.all()
+        people = []
+        names = db.session.query(Face.name).distinct().all()
+        for name in names:
+            image = Face.query.filter_by(name=name[0]).first()
+            people.append([name[0], image.image_path])
+        
+        print(people)
+        return render_template('view_faces.html', faces=people)
     
     @login_required
     def add_face(self):
@@ -228,7 +235,7 @@ class FaceViews:
             return render_template('add_face.html', face=None)
         
     @login_required
-    def update_face(self, pk):
+    def update_face(pk):
         face = Face.query.filter_by(id=pk).first()
         if request.method == 'POST':
             name = request.form['name']
@@ -246,12 +253,14 @@ class FaceViews:
             return render_template('add_face.html', face=face)
         
     @login_required
-    def delete_face(self, pk):
+    @app.route('/delete_face/<name>')
+    def delete_face(name):
         """Remove the image from the file system and delete the record from the database."""
-        face = Face.query.filter_by(id=pk).first()
-        os.remove(face.image_path)
-        db.session.delete(face)
-        db.session.commit()
+        faces = Face.query.filter_by(name=name).all()
+        for face in faces:
+            os.remove(face.image_path)
+            db.session.delete(face)
+            db.session.commit()
         return redirect(url_for('view_faces'))
 
 class ComputerVisionViews:
@@ -388,7 +397,6 @@ app.add_url_rule('/delete_contact/<pk>', view_func=contacts_view.delete_contact)
 app.add_url_rule('/view_faces', view_func=face_view.view_faces)
 app.add_url_rule('/add_face', view_func=face_view.add_face, methods=['GET', 'POST'])
 app.add_url_rule('/update_face/<pk>', view_func=face_view.update_face, methods=['GET', 'POST'])
-app.add_url_rule('/delete_face/<pk>', view_func=face_view.delete_face)
 
 def evaluate_model(name, history):
     if history.history['accuracy'][-1] > 0.7:
