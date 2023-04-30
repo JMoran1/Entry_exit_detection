@@ -156,5 +156,3 @@ app.sqlite3
 instance/app.sqlite3
 
 .DS_Store
-
-constants.py
